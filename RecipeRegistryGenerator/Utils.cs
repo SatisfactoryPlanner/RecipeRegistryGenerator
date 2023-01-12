@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.UObject;
+using System.Text.RegularExpressions;
 
 namespace RecipeRegistryGenerator
 {
@@ -40,7 +41,6 @@ namespace RecipeRegistryGenerator
             }
             return displayName.Text;
         }
-
 
     }
 }

@@ -75,12 +75,6 @@ namespace RecipeRegistryGenerator
                 return null;
             }
 
-            if (!structType.TryGetValue<float>(out var manufacturingDuration, "mManufactoringDuration"))
-            {
-                Console.WriteLine("Failed to get manufacturing duration for: " + package.Name);
-                return null;
-            }
-
             var itemClassObject = package.ResolvePackageIndex(itemClass)?.Package;
             if (itemClassObject == null)
             {
@@ -95,7 +89,7 @@ namespace RecipeRegistryGenerator
                 return null;
             }
 
-            var itemAmount = new ItemAmount(item, amount, manufacturingDuration);
+            var itemAmount = new ItemAmount(item, amount);
 
             return itemAmount;
         }
@@ -193,6 +187,13 @@ namespace RecipeRegistryGenerator
             {
                 recipe.Machine = await GetMachine(machines);
             }
+
+            if (cdo.TryGetValue<float>(out var manufacturingDuration, "mManufactoringDuration"))
+            {
+                recipe.ManufacturingDuration = manufacturingDuration;
+            }
+
+            recipe.Alternate = file.Name.Contains("Alternate");
 
 
             var displayName = Utils.GetDisplayName(package);

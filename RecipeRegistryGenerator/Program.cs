@@ -11,7 +11,7 @@ using QuikGraph;
 using QuikGraph.Graphviz;
 using RecipeRegistryGenerator;
 using RecipeRegistryGenerator.Data;
-
+using System.Text;
 
 class GraphNode
 {
@@ -55,85 +55,60 @@ class Program
 
         var dumper = new RecipeDumper(provider);
 
-        var itemRecipes = new Dictionary<String, (ItemAmount, List<Recipe>)>();
+        var itemRecipes = new Dictionary<String, (Item, List<Recipe>)>();
+        var items = new List<Item>();
+        var recipes = new List<Recipe>();
 
         var graph = new AdjacencyGraph<GraphNode, GraphEdge>();
 
         await foreach (var recipe in dumper.Dump())
         {
-            Console.WriteLine(recipe.Name + " output: " + recipe.Output.Item.Name + " machine: " + recipe.Machine.ToString());
-            if (!itemRecipes.TryGetValue(recipe.Output.Item.PackageName, out var recipes))
+            if (!items.Contains(recipe.Output.Item))
             {
-                recipes = (recipe.Output, new List<Recipe>());
-                itemRecipes.Add(recipe.Output.Item.PackageName, recipes);
+                items.Add(recipe.Output.Item);
             }
 
-            recipes.Item2.Add(recipe);
-        }
-
-        var itemGraphNodes = new Dictionary<string, GraphNode>();
-
-        foreach (var (_, (item, recipes)) in itemRecipes)
-        {
-            if (!itemGraphNodes.TryGetValue(item.Item.PackageName, out var itemVertex))
+            foreach (var inputItem in recipe.Input)
             {
-                itemVertex = new GraphNode
+                if (!items.Contains(inputItem.Item))
                 {
-                    Item = item,
-                    Recipe = null
-                };
-                graph.AddVertex(itemVertex);
-                itemGraphNodes.Add(item.Item.PackageName, itemVertex);
-            }
-
-            Console.WriteLine(graph.ContainsVertex(itemVertex));
-            graph.AddVertex(itemVertex);
-
-            foreach (var recipe in recipes)
-            {
-                var recipeVertex = new GraphNode
-                {
-                    Item = null,
-                    Recipe = recipe
-                };
-                graph.AddVertex(recipeVertex);
-                graph.AddEdge(new GraphEdge(itemVertex, recipeVertex));
-
-                foreach (var inputItem in recipe.Input)
-                {
-                    if (!itemGraphNodes.TryGetValue(inputItem.Item.PackageName, out var inputVertex))
-                    {
-                        inputVertex = new GraphNode
-                        {
-                            Item = item,
-                            Recipe = null
-                        };
-                        graph.AddVertex(inputVertex);
-                        itemGraphNodes.Add(inputItem.Item.PackageName, inputVertex);
-                    }
-
-                    graph.AddEdge(new GraphEdge(recipeVertex, inputVertex));
+                    items.Add(inputItem.Item);
                 }
             }
+
+            recipes.Add(recipe);
         }
 
-
-        var graphViz = new GraphvizAlgorithm<GraphNode, GraphEdge>(graph);
-        graphViz.FormatVertex += (sender, args) =>
+        var builder = new StringBuilder();
+        foreach (var item in items.Where(item => !string.IsNullOrEmpty(item.Name)))
         {
-            if (args.Vertex.Item != null)
-            {
-                args.VertexFormat.Label = args.Vertex.Item.Item.Name;
-                args.VertexFormat.Comment = args.Vertex.Item.Item.Name;
-            }
-            else
-            {
-                args.VertexFormat.Label = args.Vertex.Recipe.Name + " Recipe";
-                args.VertexFormat.Comment = args.Vertex.Recipe.Name + " Recipe";
-            }
-        };
+            item.Serialize(builder);
+        }
 
-        graphViz.Generate(new FileDotEngine(), "graph.graphviz");
+        var recipeBuilder = new StringBuilder();
+        foreach (var recipe in recipes
+            .Where(recipe => !string.IsNullOrEmpty(recipe.Output.Item.Name))
+            .Where(recipe => recipe.Machine != Machine.None))
+        {
+            recipe.Serialize(recipeBuilder);
+        }
+
+        Console.WriteLine("use std::{collections::HashMap, rc::Rc};");
+        Console.WriteLine("use crate::{\n    buildings::building::Machine,\n    items::{item::Item, recipe::Recipe, ItemAmount},\n};");
+        Console.WriteLine("#[allow(non_snake_case)]");
+        Console.WriteLine("#[allow(clippy::redundant_clone)]");
+
+        Console.WriteLine("pub(crate) fn get_registry() -> (Vec<Rc<Item>>, HashMap<&'static str, Vec<Recipe>>) {");
+        Console.WriteLine("let mut item_registry: Vec<Rc<Item>> = Vec::new();");
+        Console.WriteLine("let mut recipe_registry: HashMap<&'static str, Vec<Recipe>> = HashMap::new();");
+
+        Console.WriteLine("{");
+        Console.WriteLine(builder.ToString());
+        Console.WriteLine(recipeBuilder.ToString());
+        Console.WriteLine("}");
+
+        Console.WriteLine("(item_registry, recipe_registry)");
+        Console.WriteLine("}");
     }
 
     public static void Main(string[] args) => AsyncMain(args).GetAwaiter().GetResult();

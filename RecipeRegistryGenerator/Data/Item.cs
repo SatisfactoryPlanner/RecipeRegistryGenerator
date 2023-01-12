@@ -23,6 +23,21 @@ namespace RecipeRegistryGenerator.Data
         }
 
         public static Item NONE = new Item { Name = "None", PackageName = "None" };
+
+        public void Serialize(StringBuilder builder)
+        {
+            builder.Append("let ");
+            builder.Append(Name.ToSnakeCase());
+            builder.Append(" = Rc::new(Item { name: \"");
+            builder.Append(Name);
+            builder.Append("\" }); // ");
+            builder.Append(PackageName);
+            builder.Append("\n");
+
+            builder.Append("item_registry.push(");
+            builder.Append(Name.ToSnakeCase());
+            builder.Append(".clone());\n");
+        }
     }
 
 }
