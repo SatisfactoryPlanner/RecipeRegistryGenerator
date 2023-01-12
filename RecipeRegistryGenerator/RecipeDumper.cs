@@ -89,6 +89,11 @@ namespace RecipeRegistryGenerator
                 return null;
             }
 
+            if (item.Type == ItemType.Liquid || item.Type == ItemType.Gas)
+            {
+                amount /= 1000;
+            }
+
             var itemAmount = new ItemAmount(item, amount);
 
             return itemAmount;

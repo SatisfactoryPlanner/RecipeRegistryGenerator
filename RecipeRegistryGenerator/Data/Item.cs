@@ -1,4 +1,5 @@
 ﻿using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Objects.UObject;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,15 +9,36 @@ using System.Threading.Tasks;
 namespace RecipeRegistryGenerator.Data
 {
 
+    enum ItemType
+    {
+        Solid,
+        Liquid,
+        Gas
+    }
+
     class Item
     {
         public string Name { get; set; } = "None";
         public string PackageName { get; set; } = "None";
+        public ItemType Type { get; set; } = ItemType.Solid;
 
         private Item() { }
 
         public Item(IPackage package)
         {
+            var cdo = Utils.GetCDO(package);
+            if (cdo?.TryGetValue<FName>(out var form, "mForm") ?? false)
+            {
+                if (form.Text.Contains("LIQUID"))
+                {
+                    Type = ItemType.Liquid;
+                }
+                else if (form.Text.Contains("GAS"))
+                {
+                    Type = ItemType.Gas;
+                }
+            }
+
             var displayName = Utils.GetDisplayName(package);
             Name = displayName ?? "";
             PackageName = package.Name;
