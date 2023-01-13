@@ -20,6 +20,7 @@ namespace RecipeRegistryGenerator.Data
     {
         public string Name { get; set; } = "None";
         public string PackageName { get; set; } = "None";
+        public bool Raw { get; set; } = false;
         public ItemType Type { get; set; } = ItemType.Solid;
 
         private Item() { }
@@ -42,6 +43,11 @@ namespace RecipeRegistryGenerator.Data
             var displayName = Utils.GetDisplayName(package);
             Name = displayName ?? "";
             PackageName = package.Name;
+
+            if (package.Name.Contains("RawResources"))
+            {
+                Raw = true;
+            }
         }
 
         public static Item NONE = new Item { Name = "None", PackageName = "None" };
@@ -50,9 +56,24 @@ namespace RecipeRegistryGenerator.Data
         {
             builder.Append("let ");
             builder.Append(Name.ToSnakeCase());
-            builder.Append(" = Rc::new(Item { name: \"");
+            builder.Append(" = Rc::new(Item { ");
+
+            builder.Append("name: \"");
             builder.Append(Name);
-            builder.Append("\" }); // ");
+            builder.Append("\", ");
+
+            builder.Append("raw: ");
+
+            if (Raw)
+            {
+                builder.Append("true");
+            }
+            else
+            {
+                builder.Append("false");
+            }
+
+            builder.Append("}); // ");
             builder.Append(PackageName);
             builder.Append("\n");
 

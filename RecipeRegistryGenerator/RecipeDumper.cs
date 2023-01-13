@@ -94,6 +94,7 @@ namespace RecipeRegistryGenerator
                 amount /= 1000;
             }
 
+
             var itemAmount = new ItemAmount(item, amount);
 
             return itemAmount;
