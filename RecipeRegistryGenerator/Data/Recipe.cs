@@ -10,6 +10,7 @@ namespace RecipeRegistryGenerator.Data
     class Recipe
     {
         public string Name { get; set; } = "";
+        public string PackageName { get; set; } = "None";
         public List<ItemAmount> Input { get; set; } = new();
         public ItemAmount Output { get; set; } = new(Item.NONE, 0);
         public ItemAmount? Byproduct { get; set; } = null;
@@ -71,7 +72,9 @@ namespace RecipeRegistryGenerator.Data
             }
             builder.Append(" ");
 
-            builder.Append("};\n");
+            builder.Append("}; // ");
+            builder.Append(PackageName);
+            builder.Append("\n");
 
             builder.Append("recipe_registry.entry(\"");
             builder.Append(Output.Item.Name);

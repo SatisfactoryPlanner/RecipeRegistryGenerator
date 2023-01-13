@@ -167,6 +167,7 @@ namespace RecipeRegistryGenerator
                 Console.WriteLine("No output for: " + file.Path);
                 return null;
             }
+            recipe.PackageName = package.Name;
             recipe.Output = outputItem;
 
             if (output.Properties.Count > 1)
@@ -199,7 +200,7 @@ namespace RecipeRegistryGenerator
                 recipe.ManufacturingDuration = MathF.Max(manufacturingDuration, 1.0f);
             }
 
-            recipe.Alternate = file.Name.Contains("Alternate");
+            recipe.Alternate = package.Name.Contains("Alternate");
 
 
             var displayName = Utils.GetDisplayName(package);
