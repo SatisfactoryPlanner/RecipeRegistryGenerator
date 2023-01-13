@@ -13,7 +13,7 @@ namespace RecipeRegistryGenerator.Data
         public List<ItemAmount> Input { get; set; } = new();
         public ItemAmount Output { get; set; } = new(Item.NONE, 0);
         public ItemAmount? Byproduct { get; set; } = null;
-        public float ManufacturingDuration { get; set; } = 0.0f;
+        public float ManufacturingDuration { get; set; } = 1.0f;
         public bool Alternate { get; set; } = false;
         public Machine Machine { get; set; } = Machine.None;
 

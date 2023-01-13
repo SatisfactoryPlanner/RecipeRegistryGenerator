@@ -196,7 +196,7 @@ namespace RecipeRegistryGenerator
 
             if (cdo.TryGetValue<float>(out var manufacturingDuration, "mManufactoringDuration"))
             {
-                recipe.ManufacturingDuration = manufacturingDuration;
+                recipe.ManufacturingDuration = MathF.Max(manufacturingDuration, 1.0f);
             }
 
             recipe.Alternate = file.Name.Contains("Alternate");
