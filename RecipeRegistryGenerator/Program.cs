@@ -41,9 +41,12 @@ class Program
 {
     private static async Task AsyncMain(string[] args)
     {
-        // todo: get from args
+        var gameDir = args[0];
+        var assetsDir = args[1];
+        var generatedFile = args[2];
+
         var provider = new DefaultFileProvider(
-            "C:\\Program Files\\Epic Games\\SatisfactoryExperimental\\FactoryGame\\Content\\Paks\\",
+            gameDir,
             SearchOption.TopDirectoryOnly,
             versions: new VersionContainer(EGame.GAME_UE4_26));
 
@@ -82,6 +85,13 @@ class Program
         var builder = new StringBuilder();
         foreach (var item in items.Where(item => !string.IsNullOrEmpty(item.Name)))
         {
+            var icon = item.GetIcon();
+            if (icon != null)
+            {
+                var data = icon.Encode(SkiaSharp.SKEncodedImageFormat.Png, 0);
+                using var fileStream = new FileStream(assetsDir + "\\" + item.Name + ".png", FileMode.Create, FileAccess.Write);
+                data.AsStream().CopyTo(fileStream);
+            }
             item.Serialize(builder);
         }
 
@@ -93,22 +103,26 @@ class Program
             recipe.Serialize(recipeBuilder);
         }
 
-        Console.WriteLine("use std::{collections::HashMap, rc::Rc};");
-        Console.WriteLine("use crate::{\n    buildings::building::Machine,\n    items::{item::Item, recipe::Recipe, ItemAmount},\n};");
-        Console.WriteLine("#[allow(non_snake_case)]");
-        Console.WriteLine("#[allow(clippy::redundant_clone)]");
+        var fileBuilder = new StringBuilder();
 
-        Console.WriteLine("pub(crate) fn get_registry() -> (Vec<Rc<Item>>, HashMap<&'static str, Vec<Recipe>>) {");
-        Console.WriteLine("let mut item_registry: Vec<Rc<Item>> = Vec::new();");
-        Console.WriteLine("let mut recipe_registry: HashMap<&'static str, Vec<Recipe>> = HashMap::new();");
+        fileBuilder.AppendLine("use std::{collections::HashMap, rc::Rc};");
+        fileBuilder.AppendLine("use crate::{\n    buildings::building::Machine,\n    items::{item::Item, recipe::Recipe, ItemAmount},\n};");
+        fileBuilder.AppendLine("#[allow(non_snake_case)]");
+        fileBuilder.AppendLine("#[allow(clippy::redundant_clone)]");
 
-        Console.WriteLine("{");
-        Console.WriteLine(builder.ToString());
-        Console.WriteLine(recipeBuilder.ToString());
-        Console.WriteLine("}");
+        fileBuilder.AppendLine("pub(crate) fn get_registry() -> (Vec<Rc<Item>>, HashMap<&'static str, Vec<Recipe>>) {");
+        fileBuilder.AppendLine("let mut item_registry: Vec<Rc<Item>> = Vec::new();");
+        fileBuilder.AppendLine("let mut recipe_registry: HashMap<&'static str, Vec<Recipe>> = HashMap::new();");
 
-        Console.WriteLine("(item_registry, recipe_registry)");
-        Console.WriteLine("}");
+        fileBuilder.AppendLine("{");
+        fileBuilder.AppendLine(builder.ToString());
+        fileBuilder.AppendLine(recipeBuilder.ToString());
+        fileBuilder.AppendLine("}");
+
+        fileBuilder.AppendLine("(item_registry, recipe_registry)");
+        fileBuilder.AppendLine("}");
+
+        File.WriteAllText(generatedFile, fileBuilder.ToString());
     }
 
     public static void Main(string[] args) => AsyncMain(args).GetAwaiter().GetResult();

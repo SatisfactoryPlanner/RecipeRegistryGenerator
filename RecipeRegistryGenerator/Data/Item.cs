@@ -1,5 +1,9 @@
 ﻿using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse_Conversion.Textures;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +25,7 @@ namespace RecipeRegistryGenerator.Data
         public string Name { get; set; } = "None";
         public string PackageName { get; set; } = "None";
         public bool Raw { get; set; } = false;
+        public FPackageIndex? Icon { get; set; } = null;
         public ItemType Type { get; set; } = ItemType.Solid;
 
         private Item() { }
@@ -48,6 +53,21 @@ namespace RecipeRegistryGenerator.Data
             {
                 Raw = true;
             }
+
+            if (cdo.TryGetValue<FPackageIndex>(out var persistentBigIcon, "mPersistentBigIcon"))
+            {
+                Icon = persistentBigIcon;
+            }
+        }
+
+        public SKBitmap? GetIcon()
+        {
+            if (Icon?.TryLoad(out UTexture2D export) ?? false)
+            {
+                return export.Decode();
+            }
+
+            return null;
         }
 
         public static Item NONE = new Item { Name = "None", PackageName = "None" };
